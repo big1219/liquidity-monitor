@@ -186,7 +186,7 @@ export default function Dashboard() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
-          {[["overview", "종합"], ["signal", "매매시그널"], ["macro", "매크로"], ["news", "뉴스/알림"]].map(function(t) {
+          {[["overview", "종합"], ["signal", "매매시그널"], ["macro", "매크로"], ["forecast", "예측"], ["news", "뉴스/알림"]].map(function(t) {
             return <button key={t[0]} onClick={function() { setTab(t[0]); }} style={{ padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, background: tab === t[0] ? C.accentD : "transparent", color: tab === t[0] ? C.accent : C.t2, position: "relative" }}>
               {t[1]}
               {t[0] === "news" && alertCount > 0 && <span style={{ position: "absolute", top: 2, right: 2, width: 16, height: 16, borderRadius: "50%", background: C.danger, color: "#fff", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{alertCount}</span>}
@@ -200,7 +200,7 @@ export default function Dashboard() {
             { l: "TGA", v: latest.tga, u: "B$", ch: latest.tgaChange },
             { l: "Fed MBS", v: latest.mbs, u: "B$" },
             { l: "SOFR", v: latest.sofr, u: "%" },
-            { l: "DXY", v: latest.dxy, u: "" }
+            { l: "VIX", v: latest.vix, u: "" }
           ].map(function(m, i) {
             return (<div key={i} style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 12, padding: "14px 18px" }}>
               <div style={{ color: C.t2, fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1 }}>{m.l}</div>
@@ -282,7 +282,7 @@ export default function Dashboard() {
         {/* MACRO */}
         {tab === "macro" && filtered.length > 0 && (<>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 20 }}>
-            {[{ l: "SOFR", v: latest.sofr, u: "%" }, { l: "EFFR", v: latest.effr, u: "%" }, { l: "DXY", v: latest.dxy, u: "" }, { l: "10Y", v: latest.yield10y, u: "%" }, { l: "2Y", v: latest.yield2y, u: "%" }, { l: "M2", v: latest.globalM2, u: "T$" }, { l: "Reserves", v: latest.reserves, u: "B$" }, { l: "RRP", v: latest.rrp, u: "B$" }].map(function(m, i) {
+            {[{ l: "SOFR", v: latest.sofr, u: "%" }, { l: "EFFR", v: latest.effr, u: "%" }, { l: "DXY", v: latest.dxy, u: "" }, { l: "VIX", v: latest.vix, u: "" }, { l: "10Y", v: latest.yield10y, u: "%" }, { l: "2Y", v: latest.yield2y, u: "%" }, { l: "M2", v: latest.globalM2, u: "T$" }, { l: "Reserves", v: latest.reserves, u: "B$" }, { l: "RRP", v: latest.rrp, u: "B$" }].map(function(m, i) {
               return (<div key={i} style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 10, padding: "12px 14px" }}>
                 <div style={{ color: C.t3, fontSize: 10, textTransform: "uppercase", letterSpacing: 1 }}>{m.l}</div>
                 <div style={{ color: C.t1, fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>{m.v != null ? m.v.toLocaleString() : "—"}<span style={{ fontSize: 11, color: C.t3, marginLeft: 3 }}>{m.u}</span></div>
@@ -302,6 +302,218 @@ export default function Dashboard() {
                 <Line yAxisId="r" type="monotone" dataKey="dxy" name="DXY" stroke={C.orange} strokeWidth={2} dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
+          </div>
+        </>)}
+
+        {/* FORECAST — VIX + BTC Pi Cycle + MVRV-Z Score */}
+        {tab === "forecast" && (<>
+          {/* VIX Chart (FRED real-time) */}
+          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>VIX 변동성 지수</h2>
+              <span style={{ padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, background: C.accentD, color: C.accent }}>FRED 실시간</span>
+            </div>
+            <p style={{ color: C.t3, fontSize: 12, margin: "0 0 16px" }}>CBOE VIX — S&P 500 30일 내재변동성. 공포 지수로 불리며, 20 이하 = 안정, 30+ = 공포, 40+ = 패닉.</p>
+            {filtered.length > 0 && (
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={filtered}>
+                  <CartesianGrid stroke={C.grid} strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fill: C.t3, fontSize: 10 }} tickFormatter={function(v) { return (v || "").substring(2, 7); }} interval={Math.max(1, Math.floor(filtered.length / 10))} />
+                  <YAxis tick={{ fill: C.t3, fontSize: 10 }} domain={[0, "auto"]} />
+                  <Tooltip content={Tip} />
+                  <ReferenceLine y={20} stroke={C.accent} strokeDasharray="5 5" label={{ value: "안정 20", fill: C.accent, fontSize: 10 }} />
+                  <ReferenceLine y={30} stroke={C.warn} strokeDasharray="5 5" label={{ value: "공포 30", fill: C.warn, fontSize: 10 }} />
+                  <Area type="monotone" dataKey="vix" name="VIX" stroke={C.danger} fill={C.dangerD} strokeWidth={2} dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 16 }}>
+              {[{ l: "현재 VIX", v: latest.vix || "—", c: (latest.vix || 20) > 30 ? C.danger : (latest.vix || 20) > 20 ? C.warn : C.accent },
+                { l: "상태", v: (latest.vix || 20) < 15 ? "극도 안정" : (latest.vix || 20) < 20 ? "안정" : (latest.vix || 20) < 30 ? "경계" : (latest.vix || 20) < 40 ? "공포" : "패닉", c: (latest.vix || 20) > 30 ? C.danger : (latest.vix || 20) > 20 ? C.warn : C.accent },
+                { l: "시장 영향", v: (latest.vix || 20) > 30 ? "위험자산 매도" : (latest.vix || 20) > 20 ? "변동성 확대" : "위험자산 우호", c: C.t2 },
+                { l: "역사적 평균", v: "~19.5", c: C.t3 }
+              ].map(function(m, i) {
+                return (<div key={i} style={{ background: C.bg, borderRadius: 10, padding: "12px 14px", border: "1px solid " + C.border }}>
+                  <div style={{ fontSize: 10, color: C.t3, textTransform: "uppercase", letterSpacing: 1 }}>{m.l}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: m.c, marginTop: 4, fontFamily: "'JetBrains Mono', monospace" }}>{m.v}</div>
+                </div>);
+              })}
+            </div>
+          </div>
+
+          {/* VIX Interpretation */}
+          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>VIX 해석 가이드</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+              {[{ range: "< 15", label: "극도 안정 (Complacency)", desc: "시장 안일. 역사적으로 급락 전 자주 관찰. 풋옵션 헤지 고려.", color: C.cyan },
+                { range: "15 - 20", label: "안정 (Normal)", desc: "정상 범위. 위험자산 우호적 환경. BTC/주식 상승 여건.", color: C.accent },
+                { range: "20 - 30", label: "경계 (Elevated)", desc: "불확실성 증가. 포지션 사이즈 축소 권장. 변동성 헤지 필요.", color: C.warn },
+                { range: "30 - 40", label: "공포 (Fear)", desc: "패닉 매도 진행. 역사적 매수 기회. 순유동성 동반 확인 필수.", color: C.orange },
+                { range: "> 40", label: "패닉 (Extreme Fear)", desc: "2008, 2020 수준. 대형 매수 기회이나 타이밍 중요. 분할매수 권장.", color: C.danger }
+              ].map(function(v, i) {
+                return (<div key={i} style={{ padding: "14px 16px", background: C.bg, borderRadius: 10, border: "1px solid " + C.border, borderLeft: "3px solid " + v.color }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: v.color, fontFamily: "monospace" }}>{v.range}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: C.t1 }}>{v.label}</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.t2, margin: 0, lineHeight: 1.6 }}>{v.desc}</p>
+                </div>);
+              })}
+            </div>
+          </div>
+
+          {/* BTC Pi Cycle Top Indicator */}
+          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>BTC Pi Cycle Top Indicator</h2>
+              <span style={{ padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, background: C.purpleD, color: C.purple }}>온체인</span>
+            </div>
+            <p style={{ color: C.t3, fontSize: 12, margin: "0 0 16px" }}>111일 이동평균(111DMA)이 350일 이동평균×2(350DMA×2)를 상향 돌파하면 사이클 고점 신호. 역사적으로 3일 이내 정확도.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div style={{ background: C.bg, borderRadius: 12, padding: 20, border: "1px solid " + C.border }}>
+                <div style={{ fontSize: 11, color: C.t3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>계산 공식</div>
+                <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.8 }}>
+                  <div><span style={{ color: C.cyan, fontWeight: 600 }}>111DMA</span> = BTC 111일 단순이동평균</div>
+                  <div><span style={{ color: C.orange, fontWeight: 600 }}>350DMA × 2</span> = BTC 350일 단순이동평균 × 2</div>
+                  <div style={{ marginTop: 8, color: C.danger, fontWeight: 600 }}>신호: 111DMA > 350DMA×2 → 사이클 고점</div>
+                  <div style={{ color: C.t3, fontSize: 11, marginTop: 4 }}>350 / 111 = 3.153 (Pi의 근사값)</div>
+                </div>
+              </div>
+              <div style={{ background: C.bg, borderRadius: 12, padding: 20, border: "1px solid " + C.border }}>
+                <div style={{ fontSize: 11, color: C.t3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>역사적 성과</div>
+                <div style={{ fontSize: 13, color: C.t2, lineHeight: 2 }}>
+                  {[{ cycle: "2013.11", top: "$1,177", accuracy: "1일 이내" },
+                    { cycle: "2017.12", top: "$19,783", accuracy: "3일 이내" },
+                    { cycle: "2021.04", top: "$63,558", accuracy: "3일 이내" }
+                  ].map(function(h, i) {
+                    return (<div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: C.warn }}>{h.cycle}</span>
+                      <span style={{ fontFamily: "monospace", color: C.t1 }}>{h.top}</span>
+                      <span style={{ color: C.accent, fontSize: 11 }}>{h.accuracy}</span>
+                    </div>);
+                  })}
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: 14, padding: 16, background: C.bg, borderRadius: 10, border: "1px solid " + C.border }}>
+              <div style={{ fontSize: 11, color: C.t3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>현재 상태 (2026.03 기준)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div><div style={{ fontSize: 11, color: C.t3 }}>111DMA 위치</div><div style={{ fontSize: 16, fontWeight: 700, color: C.cyan, fontFamily: "monospace" }}>350DMA×2 하회</div></div>
+                <div><div style={{ fontSize: 11, color: C.t3 }}>교차 상태</div><div style={{ fontSize: 16, fontWeight: 700, color: C.accent }}>미교차 (안전)</div></div>
+                <div><div style={{ fontSize: 11, color: C.t3 }}>해석</div><div style={{ fontSize: 14, fontWeight: 600, color: C.t2 }}>사이클 고점 아직 아님</div></div>
+              </div>
+              <p style={{ fontSize: 12, color: C.t3, margin: "10px 0 0", lineHeight: 1.6 }}>111DMA가 350DMA×2에 접근 중이나 아직 교차하지 않음. 이전 사이클 대비 상승 여력 존재. Glassnode/Bitcoin Magazine Pro에서 실시간 확인 권장.</p>
+            </div>
+          </div>
+
+          {/* MVRV Z-Score */}
+          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>BTC MVRV Z-Score</h2>
+              <span style={{ padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, background: C.purpleD, color: C.purple }}>온체인</span>
+            </div>
+            <p style={{ color: C.t3, fontSize: 12, margin: "0 0 16px" }}>시장가치(Market Cap)와 실현가치(Realized Cap)의 편차를 표준편차로 정규화. 고점/저점 예측에 역사적으로 2주 이내 정확도.</p>
+            <div style={{ background: C.bg, borderRadius: 12, padding: 20, border: "1px solid " + C.border, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: C.t3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>계산 공식</div>
+              <div style={{ fontSize: 15, color: C.t1, fontFamily: "monospace", textAlign: "center", padding: "12px 0", background: C.card, borderRadius: 8 }}>
+                MVRV Z-Score = (Market Cap - Realized Cap) / StdDev(Market Cap)
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 14 }}>
+                <div style={{ padding: 12, borderRadius: 8, background: C.card }}>
+                  <div style={{ fontSize: 11, color: C.t3 }}>Market Cap</div>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>현재 BTC 가격 × 유통량. 시장 심리 반영.</div>
+                </div>
+                <div style={{ padding: 12, borderRadius: 8, background: C.card }}>
+                  <div style={{ fontSize: 11, color: C.t3 }}>Realized Cap</div>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>각 UTXO의 마지막 이동 가격 합산. "공정가치".</div>
+                </div>
+                <div style={{ padding: 12, borderRadius: 8, background: C.card }}>
+                  <div style={{ fontSize: 11, color: C.t3 }}>Standard Deviation</div>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>시작일부터 현재까지 누적 표준편차.</div>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 14 }}>
+              {[{ range: "Z > 7", label: "극도 과열 (레드존)", desc: "사이클 고점 임박. 2013: Z=9.5, 2017: Z=9.5, 2021: Z=7.5", color: C.danger },
+                { range: "3 < Z < 7", label: "과열 주의", desc: "강세장 후반. 부분 이익실현 권장. 모멘텀 둔화 감시.", color: C.warn },
+                { range: "0 < Z < 3", label: "정상 범위", desc: "공정가치 근처. 장기 보유 유리. 현재 대부분의 시간 이 구간.", color: C.accent },
+                { range: "Z < 0", label: "저평가 (그린존)", desc: "시장가 < 실현가. 역사적 최적 매수 구간. 2015, 2019, 2022.", color: C.cyan }
+              ].map(function(z, i) {
+                return (<div key={i} style={{ padding: "14px 16px", background: C.bg, borderRadius: 10, border: "1px solid " + C.border, borderLeft: "3px solid " + z.color }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: z.color, fontFamily: "monospace" }}>{z.range}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: C.t1 }}>{z.label}</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: C.t2, margin: 0, lineHeight: 1.6 }}>{z.desc}</p>
+                </div>);
+              })}
+            </div>
+            <div style={{ padding: 16, background: C.bg, borderRadius: 10, border: "1px solid " + C.border }}>
+              <div style={{ fontSize: 11, color: C.t3, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>현재 상태 (2026.03 기준)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div><div style={{ fontSize: 11, color: C.t3 }}>추정 Z-Score</div><div style={{ fontSize: 22, fontWeight: 800, color: C.warn, fontFamily: "monospace" }}>~2.5</div></div>
+                <div><div style={{ fontSize: 11, color: C.t3 }}>구간</div><div style={{ fontSize: 16, fontWeight: 700, color: C.accent }}>정상 범위</div></div>
+                <div><div style={{ fontSize: 11, color: C.t3 }}>해석</div><div style={{ fontSize: 14, fontWeight: 600, color: C.t2 }}>공정가치 상회, 과열 아님</div></div>
+              </div>
+              <p style={{ fontSize: 12, color: C.t3, margin: "10px 0 0", lineHeight: 1.6 }}>레드존(Z=7+)까지 상당한 거리. 사이클 고점 도달 전 상승 여력 존재. Glassnode, CoinGlass에서 실시간 Z-Score 확인 권장.</p>
+            </div>
+          </div>
+
+          {/* Composite Forecast */}
+          <div style={{ background: C.card, border: "2px solid " + C.purple + "44", borderRadius: 20, padding: 28, marginBottom: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 16px", textAlign: "center" }}>복합 예측 종합</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 16 }}>
+              {(function() {
+                var vixVal = latest.vix || 20;
+                var vixSignal = vixVal > 30 ? "공포 — 역발상 매수 구간" : vixVal > 20 ? "경계 — 포지션 축소" : "안정 — 위험자산 우호";
+                var vixColor = vixVal > 30 ? C.danger : vixVal > 20 ? C.warn : C.accent;
+                return [
+                  { icon: "◉", name: "VIX", value: String(vixVal), signal: vixSignal, color: vixColor, source: "FRED 실시간" },
+                  { icon: "◎", name: "Pi Cycle Top", value: "미교차", signal: "사이클 고점 아님 — 상승 여력 존재", color: C.accent, source: "온체인 (Glassnode)" },
+                  { icon: "◈", name: "MVRV Z-Score", value: "~2.5", signal: "정상 범위 — 과열 아님, 레드존 거리 멀음", color: C.accent, source: "온체인 (Glassnode)" },
+                  { icon: "◆", name: "순유동성", value: (latest.netLiquidity || 0).toLocaleString() + " B$", signal: signal ? signal.label : "관망", color: signal ? signal.color : C.t2, source: "FRED 실시간" },
+                  { icon: "◇", name: "TGA", value: (latest.tga || 0) + " B$", signal: (latest.tga || 0) > 800 ? "유동성 흡수 중" : "유동성 공급 중", color: (latest.tga || 0) > 800 ? C.danger : C.accent, source: "FRED 실시간" },
+                  { icon: "○", name: "DXY", value: String(latest.dxy || "—"), signal: (latest.dxy || 99) > 110 ? "달러 초강세 — 위험자산 약세" : "달러 안정", color: (latest.dxy || 99) > 110 ? C.danger : C.accent, source: "FRED 실시간" }
+                ];
+              })().map(function(f, i) {
+                return (<div key={i} style={{ background: C.bg, borderRadius: 12, padding: "16px 18px", border: "1px solid " + C.border }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 16, color: f.color }}>{f.icon}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{f.name}</span>
+                    <span style={{ marginLeft: "auto", fontSize: 10, color: C.t3, background: C.card, padding: "2px 6px", borderRadius: 4 }}>{f.source}</span>
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: f.color, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>{f.value}</div>
+                  <div style={{ fontSize: 12, color: C.t2 }}>{f.signal}</div>
+                </div>);
+              })}
+            </div>
+            <div style={{ padding: 16, background: C.bg, borderRadius: 12, border: "1px solid " + C.border }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, marginBottom: 8, textAlign: "center" }}>종합 판단</div>
+              <p style={{ fontSize: 13, color: C.t2, margin: 0, lineHeight: 1.8, textAlign: "center" }}>
+                {(function() {
+                  var vv = latest.vix || 20;
+                  var bullCount = 0; var bearCount = 0;
+                  if (vv < 20) bullCount++; else if (vv > 30) { bullCount++; } else bearCount++;
+                  bullCount++; // Pi Cycle 미교차
+                  bullCount++; // MVRV Z < 7
+                  if ((latest.tga || 0) < 600) bullCount++; else bearCount++;
+                  if ((latest.dxy || 99) < 105) bullCount++; else bearCount++;
+                  if (signal && signal.score > 0) bullCount++; else bearCount++;
+                  if (bullCount >= 4) return "BTC 사이클 고점 미도달 + 유동성 조건 혼조 → 중기적 상승 여력 존재. Pi Cycle 미교차, MVRV-Z 정상 범위 확인. 단, TGA $" + (latest.tga || 0) + "B 고잔고 및 DXY " + (latest.dxy || "—") + " 강세가 단기 압박 요인.";
+                  if (bearCount >= 4) return "유동성 긴축 + 달러 강세 + VIX 상승 → 단기 위험자산 하방 압력. 그러나 Pi Cycle/MVRV-Z는 사이클 고점이 아님을 시사.";
+                  return "강세/약세 요인이 혼재. Pi Cycle/MVRV-Z는 사이클 고점 미도달 시사 (중기 긍정). 그러나 TGA/DXY/VIX는 단기 변동성 확대 가능성을 경고. 분할 매수/포지션 관리 권장.";
+                })()}
+              </p>
+            </div>
+          </div>
+
+          {/* Data sources note */}
+          <div style={{ padding: 16, background: C.card, borderRadius: 12, border: "1px solid " + C.border, fontSize: 12, color: C.t3, lineHeight: 1.7 }}>
+            <strong style={{ color: C.t2 }}>데이터 소스:</strong> VIX — FRED VIXCLS (실시간). Pi Cycle / MVRV Z-Score — 온체인 데이터 (Glassnode, Bitcoin Magazine Pro, CoinGlass). 온체인 지표는 무료 API 미제공으로 큐레이션 데이터 기반. 실시간 확인:
+            <a href="https://www.bitcoinmagazinepro.com/charts/pi-cycle-top-indicator/" target="_blank" rel="noopener" style={{ color: C.cyan, marginLeft: 4 }}>Pi Cycle</a> |
+            <a href="https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/" target="_blank" rel="noopener" style={{ color: C.cyan, marginLeft: 4 }}>MVRV Z-Score</a> |
+            <a href="https://studio.glassnode.com/charts/market.MvrvZScore" target="_blank" rel="noopener" style={{ color: C.cyan, marginLeft: 4 }}>Glassnode</a>
+            <br /><strong style={{ color: C.warn }}>⚠️</strong> 예측은 참고 목적이며 투자 조언이 아닙니다. 모든 지표는 후행적이며 미래를 보장하지 않습니다.
           </div>
         </>)}
 
