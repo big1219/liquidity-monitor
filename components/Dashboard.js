@@ -375,7 +375,7 @@ export default function Dashboard() {
                 <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.8 }}>
                   <div><span style={{ color: C.cyan, fontWeight: 600 }}>111DMA</span> = BTC 111일 단순이동평균</div>
                   <div><span style={{ color: C.orange, fontWeight: 600 }}>350DMA × 2</span> = BTC 350일 단순이동평균 × 2</div>
-                  <div style={{ marginTop: 8, color: C.danger, fontWeight: 600 }}>신호: 111DMA > 350DMA×2 → 사이클 고점</div>
+                  <div style={{ marginTop: 8, color: C.danger, fontWeight: 600 }}>{"신호: 111DMA > 350DMA×2 → 사이클 고점"}</div>
                   <div style={{ color: C.t3, fontSize: 11, marginTop: 4 }}>350 / 111 = 3.153 (Pi의 근사값)</div>
                 </div>
               </div>
