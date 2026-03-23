@@ -1,10 +1,10 @@
 const FRED_BASE = "https://api.stlouisfed.org/fred/series/observations";
 
 async function fetchSeries(seriesId, apiKey, limit) {
-  const url = FRED_BASE + "?series_id=" + seriesId + "&api_key=" + apiKey + "&file_type=json&sort_order=desc&limit=" + limit;
-  const res = await fetch(url);
+  var url = FRED_BASE + "?series_id=" + seriesId + "&api_key=" + apiKey + "&file_type=json&sort_order=desc&limit=" + limit;
+  var res = await fetch(url);
   if (!res.ok) return [];
-  const json = await res.json();
+  var json = await res.json();
   return (json.observations || []).filter(function(o) { return o.value !== "."; }).map(function(o) { return { date: o.date, value: parseFloat(o.value) }; });
 }
 
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: "FRED_API_KEY not set" });
 
   try {
-    var series = { WALCL: 60, WTREGEN: 60, WSHOMCB: 60, RRPONTSYD: 60, WRESBAL: 60, SOFR: 60, DTWEXBGS: 60, M2SL: 24, EFFR: 60, DGS10: 60, DGS2: 60 };
+    var series = { WALCL: 60, WTREGEN: 60, WSHOMCB: 60, RRPONTSYD: 60, WRESBAL: 60, SOFR: 60, DTWEXBGS: 60, M2SL: 24, EFFR: 60, DGS10: 60, DGS2: 60, VIXCLS: 60 };
     var results = {};
     await Promise.all(Object.entries(series).map(async function(entry) {
       results[entry[0]] = await fetchSeries(entry[0], apiKey, entry[1]);
@@ -43,13 +43,14 @@ export default async function handler(req, res) {
       var effr = findClosest(results.EFFR, d) || 3.58;
       var y10 = findClosest(results.DGS10, d) || 4.2;
       var y2 = findClosest(results.DGS2, d) || 3.7;
+      var vix = findClosest(results.VIXCLS, d) || 20;
       return {
         date: d, fedAssets: Math.round(fa), tga: Math.round(tga), mbs: Math.round(mbs),
         rrp: Math.round(rrp), reserves: Math.round(rsv), netLiquidity: Math.round(fa - tga - rrp),
         sofr: Math.round(sofr * 100) / 100, dxy: Math.round(dxy * 10) / 10,
         globalM2: Math.round(m2 * 4.5 * 10) / 10, stablecoinSupply: 310,
         effr: Math.round(effr * 100) / 100, yield10y: Math.round(y10 * 100) / 100,
-        yield2y: Math.round(y2 * 100) / 100,
+        yield2y: Math.round(y2 * 100) / 100, vix: Math.round(vix * 100) / 100,
         weeklyChange: 0, tgaChange: 0, rrpChange: 0, signal: "NEUTRAL", signalScore: 0
       };
     });
