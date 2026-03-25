@@ -557,19 +557,29 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* CME FedWatch Link */}
-          <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "18px 24px", background: C.card, borderRadius: 12, border: "1px solid " + C.blue + "44", marginBottom: 20, textDecoration: "none", transition: "border-color 0.2s" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{ fontSize: 24 }}>📊</span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.t1 }}>CME FedWatch Tool</div>
-                  <div style={{ fontSize: 12, color: C.t2, marginTop: 2 }}>FOMC 회의별 금리 확률 — 시장이 예상하는 금리 경로 실시간 확인</div>
-                </div>
-              </div>
-              <span style={{ fontSize: 12, color: C.blue, fontWeight: 600 }}>바로가기 →</span>
+          {/* Market Tools Collection */}
+          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 16px" }}>시장 분석 도구 모음</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[{ name: "CME FedWatch", url: "https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html", desc: "FOMC 금리 확률 실시간", cat: "금리/매크로", color: C.blue },
+                { name: "Trading Economics", url: "https://tradingeconomics.com/", desc: "글로벌 매크로 경제 지표 종합", cat: "금리/매크로", color: C.blue },
+                { name: "Macrotrends", url: "https://www.macrotrends.net/", desc: "장기 차트 · 밸류에이션 · 역사적 데이터", cat: "금리/매크로", color: C.blue },
+                { name: "Dataroma", url: "https://www.dataroma.com/m/managers.php", desc: "버핏 등 슈퍼투자자 82명 포트폴리오 추적", cat: "스마트머니", color: C.purple },
+                { name: "TipRanks", url: "https://www.tipranks.com/", desc: "애널리스트 목표가 · 컨센서스 · 내부자 거래", cat: "스마트머니", color: C.purple },
+                { name: "ETF.com", url: "https://www.etf.com/", desc: "ETF 자금 흐름 · 신규 상장 · 섹터 분석", cat: "ETF/자금흐름", color: C.accent },
+                { name: "Whale Alert", url: "https://whale-alert.io/", desc: "대형 크립토 이체 실시간 추적", cat: "크립토/고래", color: C.warn },
+                { name: "Arkham Intel", url: "https://platform.arkhamintelligence.com/", desc: "온체인 지갑 추적 · 고래 포트폴리오", cat: "크립토/고래", color: C.warn }
+              ].map(function(t, i) {
+                return (<a key={i} href={t.url} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 16px", background: C.bg, borderRadius: 10, border: "1px solid " + C.border, borderLeft: "3px solid " + t.color, textDecoration: "none", transition: "border-color 0.2s" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{t.name}</span>
+                    <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 9, fontWeight: 700, background: t.color + "22", color: t.color }}>{t.cat}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: C.t2 }}>{t.desc}</div>
+                </a>);
+              })}
             </div>
-          </a>
+          </div>
 
           {/* Data sources note */}
           <div style={{ padding: 16, background: C.card, borderRadius: 12, border: "1px solid " + C.border, fontSize: 12, color: C.t3, lineHeight: 1.7 }}>
