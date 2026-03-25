@@ -557,6 +557,20 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* CME FedWatch Link */}
+          <a href="https://www.cmegroup.com/markets/interest-rates/cme-fedwatch-tool.html" target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "18px 24px", background: C.card, borderRadius: 12, border: "1px solid " + C.blue + "44", marginBottom: 20, textDecoration: "none", transition: "border-color 0.2s" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 24 }}>📊</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.t1 }}>CME FedWatch Tool</div>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 2 }}>FOMC 회의별 금리 확률 — 시장이 예상하는 금리 경로 실시간 확인</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 12, color: C.blue, fontWeight: 600 }}>바로가기 →</span>
+            </div>
+          </a>
+
           {/* Data sources note */}
           <div style={{ padding: 16, background: C.card, borderRadius: 12, border: "1px solid " + C.border, fontSize: 12, color: C.t3, lineHeight: 1.7 }}>
             <strong style={{ color: C.t2 }}>데이터 소스:</strong> VIX — FRED VIXCLS (실시간). Pi Cycle / MVRV Z-Score — 온체인 데이터 (Glassnode, Bitcoin Magazine Pro, CoinGlass). 온체인 지표는 무료 API 미제공으로 큐레이션 데이터 기반. 실시간 확인:
