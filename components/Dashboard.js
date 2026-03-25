@@ -639,7 +639,8 @@ export default function Dashboard() {
                   </div>
                   <span style={{ fontSize: 10, color: C.t3, fontFamily: "monospace" }}>{timeAgo}</span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: C.t1, lineHeight: 1.4, marginBottom: 4 }}>{n.title}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.t1, lineHeight: 1.4, marginBottom: 2 }}>{n.titleKo || n.title}</div>
+                {n.titleKo && <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.3, marginBottom: 4 }}>{n.title}</div>}
                 {n.desc && <p style={{ fontSize: 11, color: C.t3, margin: 0, lineHeight: 1.5 }}>{n.desc.substring(0, 120)}{n.desc.length > 120 ? "..." : ""}</p>}
               </a>);
             })}
