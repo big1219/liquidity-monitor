@@ -67,17 +67,6 @@ function generateAlerts(data) {
   return alerts.sort(function(a, b) { var o = { danger: 0, warn: 1, positive: 2, neutral: 3 }; return (o[a.type] || 3) - (o[b.type] || 3); });
 }
 
-var CURATED_NEWS = [
-  { title: "FOMC 3월: 금리 3.5-3.75% 동결, 연내 1회 인하 전망", date: "2026-03-18", cat: "FOMC", impact: "neutral", summary: "이란 전쟁 불확실성 속 동결. GDP 2.4% 상향, 인플레 2.7%." },
-  { title: "Fed MBS $2.01T — 피크 대비 27% 감소", date: "2026-03-12", cat: "MBS", impact: "negative", summary: "QT 종료 후에도 런오프 지속. 만기 대금 → T-bill 전환." },
-  { title: "Warsh 차기 Fed 의장 지명 — 매파적 비둘기", date: "2026-02-24", cat: "FED", impact: "warn", summary: "금리 인하 가능하나 적극적 대차대조표 축소 예상. 5월 취임." },
-  { title: "ON RRP 완전 고갈 → 유동성 완충 소멸", date: "2026-03-05", cat: "RRP", impact: "negative", summary: "RRP $0. TGA 변동이 지급준비금에 직접 영향. 변동성 확대." },
-  { title: "BlackRock: TGA가 은행 유동성의 핵심 결정 요인", date: "2026-02-28", cat: "LIQUIDITY", impact: "negative", summary: "재정-통화정책 얽힘 심화. TGA 재건으로 은행 준비금 2% 급감." },
-  { title: "4월 세금 시즌: TGA 급등 → 유동성 흡수 예상", date: "2026-03-10", cat: "TGA", impact: "negative", summary: "4월 중순 대규모 세수 유입 예상. RRP 완충 없어 레포 변동성 주의." },
-  { title: "레포시장 $12.6T 돌파 — 시스템 레버리지 의존 심화", date: "2026-02-20", cat: "LIQUIDITY", impact: "warn", summary: "2025년 한 해 레포시장 2배 이상 확대. 구조적 취약성 증가." },
-  { title: "스테이블코인 $310B+ 사상 최고 — 크립토 대기자금", date: "2026-03-15", cat: "CRYPTO", impact: "positive", summary: "USDT+USDC 사상 최대. 사이드라인 자금 축적 = 매수 대기." },
-];
-
 var FOMC_2026 = [
   { date: "2026-01-27", label: "1월", done: true, result: "동결" },
   { date: "2026-03-17", label: "3월 SEP", done: true, result: "동결" },
@@ -603,34 +592,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Curated News */}
-          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>자산시장 영향 뉴스</h2>
-              <span style={{ padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, background: C.blueD, color: C.blue }}>큐레이션</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {CURATED_NEWS.map(function(n, i) {
-                var catC = { FOMC: C.blue, MBS: C.purple, FED: C.warn, RRP: C.accent, LIQUIDITY: C.cyan, TGA: C.warn, CRYPTO: C.accent };
-                var impC = { positive: C.accent, negative: C.danger, neutral: C.t2, warn: C.warn };
-                var cc = catC[n.cat] || C.t2;
-                var ic = impC[n.impact] || C.t2;
-                return (<div key={i} style={{ padding: "16px 18px", background: C.bg, borderRadius: 12, border: "1px solid " + C.border, borderLeft: "3px solid " + cc }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: cc + "22", color: cc }}>{n.cat}</span>
-                    <span style={{ fontSize: 11, color: C.t3, fontFamily: "monospace" }}>{n.date}</span>
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, marginBottom: 6, lineHeight: 1.4 }}>{n.title}</div>
-                  <p style={{ fontSize: 12, color: C.t2, margin: "0 0 8px", lineHeight: 1.6 }}>{n.summary}</p>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: ic }}>{n.impact === "positive" ? "▲ 유동성+" : n.impact === "negative" ? "▼ 유동성-" : n.impact === "warn" ? "⚠ 주의" : "● 중립"}</span>
-                </div>);
-              })}
-            </div>
-          </div>
-
           <div style={{ padding: 16, background: C.card, borderRadius: 12, border: "1px solid " + C.border, fontSize: 12, color: C.t3, lineHeight: 1.7 }}>
-            <strong style={{ color: C.t2 }}>알림 소스:</strong> 데이터 기반 알림은 FRED API 실시간 데이터의 급변동을 자동 감지합니다. 큐레이션 뉴스는 Fed 공식발표, NY Fed, BlackRock, Wolf Street 등 공개 소스를 기반으로 합니다.
-            <br /><strong style={{ color: C.warn }}>⚠️</strong> 뉴스와 알림은 참고 목적이며 투자 조언이 아닙니다.
+            <strong style={{ color: C.t2 }}>알림 소스:</strong> 데이터 기반 알림은 FRED API 실시간 데이터의 급변동을 자동 감지합니다. FRED 주간 데이터(목요일 업데이트) 기반이므로 알림도 주 1회 갱신됩니다.
+            <br /><strong style={{ color: C.warn }}>⚠️</strong> 알림은 참고 목적이며 투자 조언이 아닙니다.
           </div>
         </>)}
 
