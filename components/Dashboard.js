@@ -103,7 +103,10 @@ export default function Dashboard() {
     .finally(function() { setLoading(false); });
   }, []);
 
+  var rtls = useState(false); var rtLoading = rtls[0]; var setRtLoading = rtls[1];
+
   var fetchRealtime = useCallback(function() {
+    setRtLoading(true);
     return fetch("/api/realtime").then(function(r) {
       if (!r.ok) throw new Error("RT " + r.status);
       return r.json();
@@ -112,7 +115,8 @@ export default function Dashboard() {
         setRealtime(json.data);
         setRtTime(new Date().toLocaleString("ko-KR"));
       }
-    }).catch(function() { /* silent fail for realtime */ });
+    }).catch(function() { /* silent fail for realtime */ })
+    .finally(function() { setRtLoading(false); });
   }, []);
 
   useEffect(function() { fetchData(); fetchRealtime(); }, [fetchData, fetchRealtime]);
@@ -189,7 +193,7 @@ export default function Dashboard() {
             {error && <p style={{ color: C.danger, fontSize: 12, margin: "4px 0 0" }}>⚠ {error}</p>}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={function() { fetchRealtime(); }} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid " + C.border, background: "transparent", color: C.cyan, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⟳ 실시간</button>
+            <button onClick={function() { fetchRealtime(); }} disabled={rtLoading} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid " + (rtLoading ? C.border : C.cyan), background: rtLoading ? C.border : "transparent", color: rtLoading ? C.t3 : C.cyan, fontSize: 12, fontWeight: 600, cursor: rtLoading ? "wait" : "pointer", transition: "all 0.3s" }}>{rtLoading ? "◌ 로딩..." : "⟳ 실시간"}</button>
             <button onClick={fetchData} disabled={loading} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: loading ? C.border : C.accent, color: C.bg, fontSize: 13, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}>{loading ? "로딩..." : "⟳ FRED"}</button>
           </div>
         </div>
