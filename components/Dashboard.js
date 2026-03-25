@@ -97,6 +97,8 @@ export default function Dashboard() {
   var es = useState(null); var error = es[0]; var setError = es[1];
   var ts = useState("overview"); var tab = ts[0]; var setTab = ts[1];
   var rs = useState("ALL"); var range = rs[0]; var setRange = rs[1];
+  var rts = useState([]); var realtime = rts[0]; var setRealtime = rts[1];
+  var rtts = useState(null); var rtTime = rtts[0]; var setRtTime = rtts[1];
 
   var fetchData = useCallback(function() {
     setLoading(true); setError(null);
@@ -112,7 +114,23 @@ export default function Dashboard() {
     .finally(function() { setLoading(false); });
   }, []);
 
-  useEffect(function() { fetchData(); }, [fetchData]);
+  var fetchRealtime = useCallback(function() {
+    return fetch("/api/realtime").then(function(r) {
+      if (!r.ok) throw new Error("RT " + r.status);
+      return r.json();
+    }).then(function(json) {
+      if (json.success && json.data) {
+        setRealtime(json.data);
+        setRtTime(new Date().toLocaleString("ko-KR"));
+      }
+    }).catch(function() { /* silent fail for realtime */ });
+  }, []);
+
+  useEffect(function() { fetchData(); fetchRealtime(); }, [fetchData, fetchRealtime]);
+  useEffect(function() {
+    var timer = setInterval(fetchRealtime, 120000);
+    return function() { clearInterval(timer); };
+  }, [fetchRealtime]);
 
   var filtered = useMemo(function() {
     if (!data.length) return [];
@@ -178,11 +196,36 @@ export default function Dashboard() {
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: status === "live" ? C.accentD : C.dangerD, color: status === "live" ? C.accent : C.danger }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: "currentColor" }} />{status === "live" ? "LIVE" : "ERROR"}</span>
             </div>
-            <p style={{ color: C.t2, fontSize: 12, margin: 0 }}>실시간 FRED API | Net Liquidity = WALCL - TGA - RRP{lastUpdate && <span style={{ color: C.t3, marginLeft: 8 }}>업데이트: {lastUpdate}</span>}</p>
+            <p style={{ color: C.t2, fontSize: 12, margin: 0 }}>FRED 주간 + Yahoo Finance 실시간 | Net Liquidity = WALCL - TGA - RRP{lastUpdate && <span style={{ color: C.t3, marginLeft: 8 }}>FRED: {lastUpdate}</span>}{rtTime && <span style={{ color: C.accent, marginLeft: 8 }}>실시간: {rtTime}</span>}</p>
             {error && <p style={{ color: C.danger, fontSize: 12, margin: "4px 0 0" }}>⚠ {error}</p>}
           </div>
-          <button onClick={fetchData} disabled={loading} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: loading ? C.border : C.accent, color: C.bg, fontSize: 13, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}>{loading ? "로딩..." : "⟳ 새로고침"}</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={function() { fetchRealtime(); }} style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid " + C.border, background: "transparent", color: C.cyan, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⟳ 실시간</button>
+            <button onClick={fetchData} disabled={loading} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: loading ? C.border : C.accent, color: C.bg, fontSize: 13, fontWeight: 700, cursor: loading ? "wait" : "pointer" }}>{loading ? "로딩..." : "⟳ FRED"}</button>
+          </div>
         </div>
+
+        {/* Real-time Ticker Bar */}
+        {realtime.length > 0 && (
+          <div style={{ display: "flex", gap: 10, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
+            {realtime.map(function(q, i) {
+              var isUp = q.change >= 0;
+              var col = isUp ? C.accent : C.danger;
+              return (<div key={i} style={{ minWidth: 120, padding: "10px 14px", background: C.card, border: "1px solid " + C.border, borderRadius: 10, flexShrink: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.t2 }}>{q.name}</span>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: q.marketState === "REGULAR" || q.marketState === "PRE" || q.marketState === "POST" ? C.accent : C.t3 }} />
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: C.t1, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {q.name === "BTC" || q.name === "ETH" || q.name === "Gold" || q.name === "S&P500" ? q.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: col, fontFamily: "monospace" }}>
+                  {isUp ? "+" : ""}{q.change} ({isUp ? "+" : ""}{q.changePercent}%)
+                </div>
+              </div>);
+            })}
+          </div>
+        )}
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
