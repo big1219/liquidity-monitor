@@ -119,7 +119,21 @@ export default function Dashboard() {
     .finally(function() { setRtLoading(false); });
   }, []);
 
-  useEffect(function() { fetchData(); fetchRealtime(); }, [fetchData, fetchRealtime]);
+  var nws = useState([]); var news = nws[0]; var setNews = nws[1];
+  var nls = useState(false); var newsLoading = nls[0]; var setNewsLoading = nls[1];
+
+  var fetchNews = useCallback(function() {
+    setNewsLoading(true);
+    return fetch("/api/news").then(function(r) {
+      if (!r.ok) throw new Error("News " + r.status);
+      return r.json();
+    }).then(function(json) {
+      if (json.success && json.data) { setNews(json.data); }
+    }).catch(function() { /* silent */ })
+    .finally(function() { setNewsLoading(false); });
+  }, []);
+
+  useEffect(function() { fetchData(); fetchRealtime(); fetchNews(); }, [fetchData, fetchRealtime, fetchNews]);
   useEffect(function() {
     var timer = setInterval(fetchRealtime, 120000);
     return function() { clearInterval(timer); };
@@ -596,9 +610,44 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Live News Feed */}
+          <div style={{ background: C.card, border: "1px solid " + C.border, borderRadius: 16, padding: 24, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>실시간 금융 뉴스</h2>
+                <span style={{ padding: "2px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, background: C.blueD, color: C.blue }}>RSS LIVE</span>
+              </div>
+              <button onClick={fetchNews} disabled={newsLoading} style={{ padding: "6px 12px", borderRadius: 6, border: "1px solid " + C.border, background: "transparent", color: newsLoading ? C.t3 : C.blue, fontSize: 11, fontWeight: 600, cursor: newsLoading ? "wait" : "pointer" }}>{newsLoading ? "◌ 로딩..." : "⟳ 새로고침"}</button>
+            </div>
+            <p style={{ color: C.t3, fontSize: 11, margin: "0 0 12px" }}>CNBC, MarketWatch, Investing.com, Reuters 등 주요 금융 매체에서 자동 수집 (5분 캐시)</p>
+            {news.length === 0 && !newsLoading && <p style={{ color: C.t3, fontSize: 13, textAlign: "center", padding: 20 }}>뉴스를 불러오는 중이거나 일시적으로 사용할 수 없습니다.</p>}
+            {news.map(function(n, i) {
+              var catColors = { MARKETS: C.cyan, ECONOMY: C.warn, FINANCE: C.accent, BUSINESS: C.purple };
+              var cc = catColors[n.cat] || C.blue;
+              var timeAgo = "";
+              if (n.timestamp) {
+                var diff = Math.floor((Date.now() - n.timestamp) / 60000);
+                if (diff < 60) timeAgo = diff + "분 전";
+                else if (diff < 1440) timeAgo = Math.floor(diff / 60) + "시간 전";
+                else timeAgo = Math.floor(diff / 1440) + "일 전";
+              }
+              return (<a key={i} href={n.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 18px", background: C.bg, borderRadius: 10, border: "1px solid " + C.border, marginBottom: 8, textDecoration: "none", borderLeft: "3px solid " + cc, transition: "border-color 0.2s" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ padding: "2px 6px", borderRadius: 4, fontSize: 9, fontWeight: 700, background: cc + "22", color: cc }}>{n.cat}</span>
+                    <span style={{ fontSize: 10, color: C.t3 }}>{n.source}</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: C.t3, fontFamily: "monospace" }}>{timeAgo}</span>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.t1, lineHeight: 1.4, marginBottom: 4 }}>{n.title}</div>
+                {n.desc && <p style={{ fontSize: 11, color: C.t3, margin: 0, lineHeight: 1.5 }}>{n.desc.substring(0, 120)}{n.desc.length > 120 ? "..." : ""}</p>}
+              </a>);
+            })}
+          </div>
+
           <div style={{ padding: 16, background: C.card, borderRadius: 12, border: "1px solid " + C.border, fontSize: 12, color: C.t3, lineHeight: 1.7 }}>
-            <strong style={{ color: C.t2 }}>알림 소스:</strong> 데이터 기반 알림은 FRED API 실시간 데이터의 급변동을 자동 감지합니다. FRED 주간 데이터(목요일 업데이트) 기반이므로 알림도 주 1회 갱신됩니다.
-            <br /><strong style={{ color: C.warn }}>⚠️</strong> 알림은 참고 목적이며 투자 조언이 아닙니다.
+            <strong style={{ color: C.t2 }}>소스:</strong> 데이터 알림 — FRED API (주간). 실시간 뉴스 — CNBC, MarketWatch, Investing.com, Reuters RSS (5분 캐시, API 키 불필요).
+            <br /><strong style={{ color: C.warn }}>⚠️</strong> 알림과 뉴스는 참고 목적이며 투자 조언이 아닙니다.
           </div>
         </>)}
 
